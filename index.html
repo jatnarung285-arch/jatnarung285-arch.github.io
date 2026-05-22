@@ -33,8 +33,39 @@
             margin-bottom: 25px;
             font-size: 24px;
         }
-        .method-selector {
+        .tabs {
+            display: flex;
+            gap: 10px;
             margin-bottom: 25px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            color: #e74c3c;
+            border-bottom-color: #e74c3c;
+        }
+        .tab-button:hover {
+            color: #2c3e50;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .method-selector {
+            margin-bottom: 20px;
             padding-bottom: 20px;
             border-bottom: 2px solid #ecf0f1;
         }
@@ -81,9 +112,15 @@
             border-color: #3498db;
             outline: none;
         }
+        .static-rate {
+            background-color: #eaeaea;
+            color: #7f8c8d;
+            font-weight: bold;
+            cursor: not-allowed;
+        }
         button {
             width: 100%;
-            background-color: #2ecc71;
+            background-color: #e74c3c;
             color: white;
             border: none;
             padding: 14px;
@@ -95,12 +132,12 @@
             margin-top: 10px;
         }
         button:hover {
-            background-color: #27ae60;
+            background-color: #c0392b;
         }
         .result-box {
             margin-top: 25px;
             background-color: #f8f9fa;
-            border-left: 5px solid #3498db;
+            border-left: 5px solid #e74c3c;
             padding: 15px;
             border-radius: 4px;
             display: none;
@@ -119,12 +156,12 @@
         }
         .highlight {
             font-weight: bold;
-            color: #e74c3c;
+            color: #2c3e50;
         }
-        .highlight-green {
+        .highlight-red {
             font-weight: bold;
-            color: #27ae60;
-            font-size: 18px;
+            color: #e74c3c;
+            font-size: 20px;
         }
         .error-message {
             color: #e74c3c;
@@ -147,55 +184,145 @@
 <body>
 
 <div class="container">
-    <h2>คำนวณเงินกู้รายวัน</h2>
+    <h2>โปรแกรมคำนวณเงินกู้รายวัน</h2>
     
-    <div class="method-selector">
-        <label class="method-label" for="calculationMethod">เลือกวิธีคำนวณ:</label>
-        <select id="calculationMethod" onchange="updateMethodDescription()">
-            <option value="flatRate">Flat Rate (ดอกเบี้ยคงที่)</option>
-            <option value="amortization">Amortization (ลดต้นลดดอก)</option>
-        </select>
-        <div class="method-description" id="methodDescription">
-            คำนวณดอกเบี้ยจากเงินต้นทั้งจำนวนตลอดระยะเวลากู้
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+        <button class="tab-button active" onclick="switchTab('tab1')">คำนวณเสรจ์</button>
+        <button class="tab-button" onclick="switchTab('tab2')">คำนวณหลายแบบ</button>
+    </div>
+    
+    <!-- Tab 1: Fixed 20% Rate -->
+    <div id="tab1" class="tab-content active">
+        <h3 style="text-align: center; color: #e74c3c; margin-top: 0;">ดอกเบี้ยคงที่ ร้อยละ 20</h3>
+        
+        <div class="form-group">
+            <label for="principal1">จำนวนเงินต้นที่กู้ (บาท)</label>
+            <input type="number" id="principal1" placeholder="ตัวอย่าง: 10000" min="1">
+        </div>
+        
+        <div class="form-group">
+            <label for="interestRate1">อัตราดอกเบี้ย (ล็อกไว้ที่ร้อยละ 20)</label>
+            <input type="text" id="interestRate1" class="static-rate" value="20%" disabled>
+        </div>
+        
+        <div class="form-group">
+            <label for="loanDays1">ระยะเวลาที่ต้องส่ง (จำนวนวัน)</label>
+            <input type="number" id="loanDays1" placeholder="ตัวอย่าง: 24 หรือ 30" min="1">
+        </div>
+        
+        <button onclick="calculateLoanFixed()">คำนวณยอดส่งรายวัน</button>
+        
+        <div class="error-message" id="errorMsg1">กรุณากรอกเงินต้นและจำนวนวันให้ถูกต้อง</div>
+        
+        <div class="result-box" id="resultBox1">
+            <div class="result-item">
+                <span>ดอกเบี้ยร้อยละ 20 เป็นเงิน:</span>
+                <span id="resInterest1" class="highlight">0.00 บาท</span>
+            </div>
+            <div class="result-item">
+                <span>รวมเงินต้น + ดอกเบี้ยที่ต้องเก็บ:</span>
+                <span id="resTotal1" class="highlight">0.00 บาท</span>
+            </div>
+            <div class="result-item">
+                <span>ต้องเก็บรายวัน วันละ:</span>
+                <span id="resDaily1" class="highlight-red">0.00 บาท</span>
+            </div>
         </div>
     </div>
     
-    <div class="form-group">
-        <label for="principal">จำนวนเงินต้น (บาท)</label>
-        <input type="number" id="principal" placeholder="ตัวอย่าง: 10000" min="1">
-    </div>
-    
-    <div class="form-group">
-        <label for="interestRate">ดอกเบี้ยต่อปี (%)</label>
-        <input type="number" id="interestRate" placeholder="ตัวอย่าง: 15" step="0.01" min="0">
-    </div>
-    
-    <div class="form-group">
-        <label for="loanDays">ระยะเวลากู้ (วัน)</label>
-        <input type="number" id="loanDays" placeholder="ตัวอย่าง: 30" min="1">
-    </div>
-    
-    <button onclick="calculateLoan()">คำนวณผลลัพธ์</button>
-    
-    <div class="error-message" id="errorMsg">กรุณากรอกข้อมูลตัวเลขที่ถูกต้องและมากกว่า 0</div>
-    
-    <div class="result-box" id="resultBox">
-        <div class="result-item">
-            <span>ดอกเบี้ยรวมทั้งหมด:</span>
-            <span id="resInterest" class="highlight">0.00 บาท</span>
+    <!-- Tab 2: Multiple Methods -->
+    <div id="tab2" class="tab-content">
+        <div class="method-selector">
+            <label class="method-label" for="calculationMethod">เลือกวิธีคำนวณ:</label>
+            <select id="calculationMethod" onchange="updateMethodDescription()">
+                <option value="flatRate">Flat Rate (ดอกเบี้ยคงที่)</option>
+                <option value="amortization">Amortization (ลดต้นลดดอก)</option>
+            </select>
+            <div class="method-description" id="methodDescription">
+                คำนวณดอกเบี้ยจากเงินต้นทั้งจำนวนตลอดระยะเวลากู้
+            </div>
         </div>
-        <div class="result-item">
-            <span>ยอดรวมที่ต้องจ่ายคืน:</span>
-            <span id="resTotal" class="highlight">0.00 บาท</span>
+        
+        <div class="form-group">
+            <label for="principal2">จำนวนเงินต้น (บาท)</label>
+            <input type="number" id="principal2" placeholder="ตัวอย่าง: 10000" min="1">
         </div>
-        <div class="result-item">
-            <span>ยอดผ่อนจ่ายต่อวัน:</span>
-            <span id="resDaily" class="highlight-green">0.00 บาท</span>
+        
+        <div class="form-group">
+            <label for="interestRate2">ดอกเบี้ยต่อปี (%)</label>
+            <input type="number" id="interestRate2" placeholder="ตัวอย่าง: 15" step="0.01" min="0">
+        </div>
+        
+        <div class="form-group">
+            <label for="loanDays2">ระยะเวลากู้ (วัน)</label>
+            <input type="number" id="loanDays2" placeholder="ตัวอย่าง: 30" min="1">
+        </div>
+        
+        <button onclick="calculateLoanMultiple()">คำนวณผลลัพธ์</button>
+        
+        <div class="error-message" id="errorMsg2">กรุณากรอกข้อมูลตัวเลขที่ถูกต้องและมากกว่า 0</div>
+        
+        <div class="result-box" id="resultBox2">
+            <div class="result-item">
+                <span>ดอกเบี้ยรวมทั้งหมด:</span>
+                <span id="resInterest2" class="highlight">0.00 บาท</span>
+            </div>
+            <div class="result-item">
+                <span>ยอดรวมที่ต้องจ่ายคืน:</span>
+                <span id="resTotal2" class="highlight">0.00 บาท</span>
+            </div>
+            <div class="result-item">
+                <span>ยอดผ่อนจ่ายต่อวัน:</span>
+                <span id="resDaily2" class="highlight-red">0.00 บาท</span>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+    function switchTab(tabName) {
+        // Hide all tab content
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        
+        // Remove active class from all buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        // Show selected tab
+        document.getElementById(tabName).classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+    
+    function calculateLoanFixed() {
+        const principal = parseFloat(document.getElementById('principal1').value);
+        const loanDays = parseInt(document.getElementById('loanDays1').value);
+        
+        const errorMsg = document.getElementById('errorMsg1');
+        const resultBox = document.getElementById('resultBox1');
+        
+        if (isNaN(principal) || principal <= 0 || isNaN(loanDays) || loanDays <= 0) {
+            errorMsg.style.display = 'block';
+            resultBox.style.display = 'none';
+            return;
+        }
+        
+        errorMsg.style.display = 'none';
+        
+        const totalInterest = principal * 0.20;
+        const totalPayment = principal + totalInterest;
+        const dailyPayment = totalPayment / loanDays;
+        
+        document.getElementById('resInterest1').innerText = totalInterest.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        document.getElementById('resTotal1').innerText = totalPayment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        document.getElementById('resDaily1').innerText = dailyPayment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        
+        resultBox.style.display = 'block';
+    }
+    
     function updateMethodDescription() {
         const method = document.getElementById('calculationMethod').value;
         const description = document.getElementById('methodDescription');
@@ -208,7 +335,6 @@
     }
     
     function calculateLoanFlatRate(principal, interestRate, loanDays) {
-        // สูตร Flat Rate: ดอกเบี้ย = เงินต้น × อัตรา × ระยะเวลา/365
         const totalInterest = principal * (interestRate / 100) * (loanDays / 365);
         const totalPayment = principal + totalInterest;
         const dailyPayment = totalPayment / loanDays;
@@ -221,8 +347,6 @@
     }
     
     function calculateLoanAmortization(principal, interestRate, loanDays) {
-        // สูตร Amortization: ยอดผ่อนคงที่ = P × [r(1+r)^n] / [(1+r)^n - 1]
-        // โดย r = ดอกเบี้ยต่อวัน, n = จำนวนวัน
         const dailyRate = (interestRate / 100) / 365;
         const numerator = dailyRate * Math.pow(1 + dailyRate, loanDays);
         const denominator = Math.pow(1 + dailyRate, loanDays) - 1;
@@ -238,16 +362,15 @@
         };
     }
     
-    function calculateLoan() {
-        const principal = parseFloat(document.getElementById('principal').value);
-        const interestRate = parseFloat(document.getElementById('interestRate').value);
-        const loanDays = parseInt(document.getElementById('loanDays').value);
+    function calculateLoanMultiple() {
+        const principal = parseFloat(document.getElementById('principal2').value);
+        const interestRate = parseFloat(document.getElementById('interestRate2').value);
+        const loanDays = parseInt(document.getElementById('loanDays2').value);
         const method = document.getElementById('calculationMethod').value;
         
-        const errorMsg = document.getElementById('errorMsg');
-        const resultBox = document.getElementById('resultBox');
+        const errorMsg = document.getElementById('errorMsg2');
+        const resultBox = document.getElementById('resultBox2');
         
-        // ตรวจสอบความถูกต้องของข้อมูล
         if (isNaN(principal) || principal <= 0 || 
             isNaN(interestRate) || interestRate < 0 || 
             isNaN(loanDays) || loanDays <= 0) {
@@ -265,24 +388,12 @@
             result = calculateLoanAmortization(principal, interestRate, loanDays);
         }
         
-        // แสดงผลลัพธ์พร้อมจัดรูปแบบตัวเลข
-        document.getElementById('resInterest').innerText = result.totalInterest.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
-        document.getElementById('resTotal').innerText = result.totalPayment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
-        document.getElementById('resDaily').innerText = result.dailyPayment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        document.getElementById('resInterest2').innerText = result.totalInterest.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        document.getElementById('resTotal2').innerText = result.totalPayment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        document.getElementById('resDaily2').innerText = result.dailyPayment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
         
         resultBox.style.display = 'block';
     }
-    
-    // เพิ่มคุณสมบัติให้กดปุ่ม Enter เพื่อคำนวณ
-    document.getElementById('principal').addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') calculateLoan();
-    });
-    document.getElementById('interestRate').addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') calculateLoan();
-    });
-    document.getElementById('loanDays').addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') calculateLoan();
-    });
 </script>
 
 </body>
