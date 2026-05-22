@@ -3,19 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เครื่องคำนวณเงินกู้รายวัน</title>
+    <title>โปรแกรมคำนวณเงินกู้รายวัน</title>
     <style>
-        body { font-family: 'Arial', sans-serif; background-color: #f4f6f9; padding: 20px; color: #333; }
-        .container { max-width: 450px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: auto; }
-        h2 { text-align: center; color: #2c3e50; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #219653; }
-        .result { margin-top: 20px; padding: 15px; background: #e8f8f5; border-radius: 5px; display: none; }
-        .result p { margin: 5px 0; font-size: 16px; }
-        .highlight { color: #e74c3c; font-weight: bold; }
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Helvetica Neue', Arial, sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            padding: 30px;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        .method-selector {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        .method-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        .result-box {
+            margin-top: 25px;
+            background-color: #f8f9fa;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 15px;
+            color: #2c3e50;
+        }
+        .result-item:last-child {
+            margin-bottom: 0;
+            padding-top: 10px;
+            border-top: 1px dashed #bdc3c7;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .highlight-green {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 18px;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            text-align: center;
+        }
+        .method-description {
+            background-color: #ecf0f1;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 8px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -23,57 +149,140 @@
 <div class="container">
     <h2>คำนวณเงินกู้รายวัน</h2>
     
-    <div class="form-group">
-        <label>เงินต้นที่ต้องการกู้ (บาท):</label>
-        <input type="number" id="loanAmount" value="10000">
+    <div class="method-selector">
+        <label class="method-label" for="calculationMethod">เลือกวิธีคำนวณ:</label>
+        <select id="calculationMethod" onchange="updateMethodDescription()">
+            <option value="flatRate">Flat Rate (ดอกเบี้ยคงที่)</option>
+            <option value="amortization">Amortization (ลดต้นลดดอก)</option>
+        </select>
+        <div class="method-description" id="methodDescription">
+            คำนวณดอกเบี้ยจากเงินต้นทั้งจำนวนตลอดระยะเวลากู้
+        </div>
     </div>
     
     <div class="form-group">
-        <label>อัตราดอกเบี้ยต่อปี (%):</label>
-        <input type="number" id="interestRate" value="24" step="0.1">
+        <label for="principal">จำนวนเงินต้น (บาท)</label>
+        <input type="number" id="principal" placeholder="ตัวอย่าง: 10000" min="1">
     </div>
     
     <div class="form-group">
-        <label>ระยะเวลาผ่อน (วัน):</label>
-        <input type="number" id="loanTerm" value="30">
+        <label for="interestRate">ดอกเบี้ยต่อปี (%)</label>
+        <input type="number" id="interestRate" placeholder="ตัวอย่าง: 15" step="0.01" min="0">
     </div>
     
-    <button onclick="calculateLoan()">คำนวณยอดผ่อน</button>
+    <div class="form-group">
+        <label for="loanDays">ระยะเวลากู้ (วัน)</label>
+        <input type="number" id="loanDays" placeholder="ตัวอย่าง: 30" min="1">
+    </div>
     
-    <div class="result" id="resultBox">
-        <p>ต้องผ่อนจ่ายวันละ: <span id="dailyPayment" class="highlight" style="font-size: 22px;">0</span> บาท</p>
-        <p>รวมดอกเบี้ยทั้งหมด: <span id="totalInterest">0</span> บาท</p>
-        <p>รวมยอดเงินที่ต้องคืนทั้งหมด: <span id="totalPayable">0</span> บาท</p>
+    <button onclick="calculateLoan()">คำนวณผลลัพธ์</button>
+    
+    <div class="error-message" id="errorMsg">กรุณากรอกข้อมูลตัวเลขที่ถูกต้องและมากกว่า 0</div>
+    
+    <div class="result-box" id="resultBox">
+        <div class="result-item">
+            <span>ดอกเบี้ยรวมทั้งหมด:</span>
+            <span id="resInterest" class="highlight">0.00 บาท</span>
+        </div>
+        <div class="result-item">
+            <span>ยอดรวมที่ต้องจ่ายคืน:</span>
+            <span id="resTotal" class="highlight">0.00 บาท</span>
+        </div>
+        <div class="result-item">
+            <span>ยอดผ่อนจ่ายต่อวัน:</span>
+            <span id="resDaily" class="highlight-green">0.00 บาท</span>
+        </div>
     </div>
 </div>
 
 <script>
-function calculateLoan() {
-    let P = parseFloat(document.getElementById('loanAmount').value);
-    let annualRate = parseFloat(document.getElementById('interestRate').value);
-    let N = parseInt(document.getElementById('loanTerm').value);
-    
-    if (isNaN(P) || isNaN(annualRate) || isNaN(N) || P <= 0 || N <= 0) {
-        alert("กรุณากรอกข้อมูลให้ถูกต้อง");
-        return;
+    function updateMethodDescription() {
+        const method = document.getElementById('calculationMethod').value;
+        const description = document.getElementById('methodDescription');
+        
+        if (method === 'flatRate') {
+            description.innerHTML = 'คำนวณดอกเบี้ยจากเงินต้นทั้งจำนวนตลอดระยะเวลากู้ (ดอกเบี้ยคงที่)';
+        } else if (method === 'amortization') {
+            description.innerHTML = 'คำนวณดอกเบี้ยแบบลดต้นลดดอก ยอดผ่อนคงที่ทุกวัน (ดอกเบี้ยจะลดลง)';
+        }
     }
-
-    // แปลงดอกเบี้ยต่อปีเป็นดอกเบี้ยต่อวัน
-    let r = (annualRate / 100) / 365;
     
-    // สูตรคำนวณยอดผ่อนรายวันเท่ากันทุกงวด (Amortization สูตรลดต้นลดดอก)
-    let dailyPay = (P * r * Math.pow(1 + r, N)) / (Math.pow(1 + r, N) - 1);
+    function calculateLoanFlatRate(principal, interestRate, loanDays) {
+        // สูตร Flat Rate: ดอกเบี้ย = เงินต้น × อัตรา × ระยะเวลา/365
+        const totalInterest = principal * (interestRate / 100) * (loanDays / 365);
+        const totalPayment = principal + totalInterest;
+        const dailyPayment = totalPayment / loanDays;
+        
+        return {
+            totalInterest: totalInterest,
+            totalPayment: totalPayment,
+            dailyPayment: dailyPayment
+        };
+    }
     
-    let totalPay = dailyPay * N;
-    let totalInterest = totalPay - P;
+    function calculateLoanAmortization(principal, interestRate, loanDays) {
+        // สูตร Amortization: ยอดผ่อนคงที่ = P × [r(1+r)^n] / [(1+r)^n - 1]
+        // โดย r = ดอกเบี้ยต่อวัน, n = จำนวนวัน
+        const dailyRate = (interestRate / 100) / 365;
+        const numerator = dailyRate * Math.pow(1 + dailyRate, loanDays);
+        const denominator = Math.pow(1 + dailyRate, loanDays) - 1;
+        const dailyPayment = principal * (numerator / denominator);
+        
+        const totalPayment = dailyPayment * loanDays;
+        const totalInterest = totalPayment - principal;
+        
+        return {
+            totalInterest: totalInterest,
+            totalPayment: totalPayment,
+            dailyPayment: dailyPayment
+        };
+    }
     
-    // แสดงผลลัพธ์
-    document.getElementById('dailyPayment').innerText = dailyPay.toFixed(2);
-    document.getElementById('totalInterest').innerText = totalInterest.toFixed(2);
-    document.getElementById('totalPayable').innerText = totalPay.toFixed(2);
+    function calculateLoan() {
+        const principal = parseFloat(document.getElementById('principal').value);
+        const interestRate = parseFloat(document.getElementById('interestRate').value);
+        const loanDays = parseInt(document.getElementById('loanDays').value);
+        const method = document.getElementById('calculationMethod').value;
+        
+        const errorMsg = document.getElementById('errorMsg');
+        const resultBox = document.getElementById('resultBox');
+        
+        // ตรวจสอบความถูกต้องของข้อมูล
+        if (isNaN(principal) || principal <= 0 || 
+            isNaN(interestRate) || interestRate < 0 || 
+            isNaN(loanDays) || loanDays <= 0) {
+            errorMsg.style.display = 'block';
+            resultBox.style.display = 'none';
+            return;
+        }
+        
+        errorMsg.style.display = 'none';
+        
+        let result;
+        if (method === 'flatRate') {
+            result = calculateLoanFlatRate(principal, interestRate, loanDays);
+        } else if (method === 'amortization') {
+            result = calculateLoanAmortization(principal, interestRate, loanDays);
+        }
+        
+        // แสดงผลลัพธ์พร้อมจัดรูปแบบตัวเลข
+        document.getElementById('resInterest').innerText = result.totalInterest.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        document.getElementById('resTotal').innerText = result.totalPayment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        document.getElementById('resDaily').innerText = result.dailyPayment.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        
+        resultBox.style.display = 'block';
+    }
     
-    document.getElementById('resultBox').style.display = 'block';
-}
+    // เพิ่มคุณสมบัติให้กดปุ่ม Enter เพื่อคำนวณ
+    document.getElementById('principal').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') calculateLoan();
+    });
+    document.getElementById('interestRate').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') calculateLoan();
+    });
+    document.getElementById('loanDays').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') calculateLoan();
+    });
 </script>
 
 </body>
